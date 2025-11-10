@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const registerController = async (req, res) => {
   try {
-    let { name,email,password } = req.body;
+    let { name, email, password } = req.body;
 
     let existingUser = await UserModel.findOne({ email });
 
@@ -13,7 +13,6 @@ const registerController = async (req, res) => {
         message: "User already exists",
       });
     }
-
 
     let newUser = await UserModel.create({
       name,
@@ -25,11 +24,13 @@ const registerController = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-    });
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.cookie("token", token, cookieOptions);
 
     return res.status(201).json({
       message: "User registered",
@@ -47,13 +48,11 @@ const loginController = async (req, res) => {
   try {
     let { email, password } = req.body;
 
-
     if (!email || !password) {
       return res.status(400).json({
         message: "all fields are required",
       });
     }
-
 
     let user = await UserModel.findOne({ email });
 
@@ -73,11 +72,13 @@ const loginController = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-    });
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.cookie("token", token, cookieOptions);
 
     return res.status(200).json({
       message: "user logged in",
@@ -100,7 +101,13 @@ const logoutController = async (req, res) => {
         message: "Token not found",
       });
 
-    res.clearCookie("token");
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.clearCookie("token", cookieOptions);
     return res.status(200).json({
       message: "user logged out",
     });
